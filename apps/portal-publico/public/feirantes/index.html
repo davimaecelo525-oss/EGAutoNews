@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lojas parceiras | EGAutoNews</title>
+  <meta name="description" content="Conheça as agências de veículos, lojas de autopeças, oficinas e parceiros automotivos do EGAutoNews.">
+  <link rel="stylesheet" href="../styles.css">
+  <link rel="stylesheet" href="feirantes.css">
+</head>
+<body class="pagina-feirantes">
+  <div data-site-header></div>
+
+  <main class="feirantes-publicos-main">
+    <section class="feirantes-hero">
+      <div class="container">
+        <p class="eyebrow">CONTEÚDO EG AUTO NEWS</p>
+        <h1>Vídeos e Test Drive</h1>
+        <p>Acompanhe os vídeos da EG Auto News e os conteúdos de Test Drive.</p>
+      </div>
+    </section>
+
+
+    <section id="feirantesVideosSecoes" class="feirantes-videos-secoes container" aria-label="Vídeos da EG Auto News">
+      <section class="feirantes-video-bloco" aria-labelledby="tituloVideosFeirantes">
+        <div class="feirantes-video-cabecalho"><h2 id="tituloVideosFeirantes">Vídeos</h2><span>EG Auto News</span></div>
+        <div id="feirantesVideosGrid" class="feirantes-videos-grid"><p class="feirantes-video-estado">Carregando vídeos...</p></div>
+      </section>
+      <section class="feirantes-video-bloco feirantes-video-bloco-testdrive" aria-labelledby="tituloTestDriveFeirantes">
+        <div class="feirantes-video-cabecalho"><h2 id="tituloTestDriveFeirantes">Test Drive</h2><span>EG Auto News</span></div>
+        <div id="feirantesTestDriveGrid" class="feirantes-videos-grid"><p class="feirantes-video-estado">A playlist de Test Drive será adicionada aqui.</p></div>
+      </section>
+    </section>
+    <div id="feiranteDetalheView" class="container feirante-leitura-layout hidden">
+      <article class="feirante-leitura-card">
+        <div class="feirante-leitura-meta"><span id="feiranteDetalheLocal" class="feirante-leitura-selo-local"></span><span id="feiranteDetalheCategoria" class="feirante-leitura-selo-categoria"></span></div>
+        <h1 id="feiranteDetalheTitulo"></h1>
+        <div class="feirante-leitura-imagem-wrap"><img id="feiranteDetalheImagem" class="feirante-leitura-imagem" alt=""></div>
+        <p id="feiranteDetalheDescricao" class="feirante-leitura-descricao"></p>
+        <div class="feirante-leitura-info"><p><strong>Endereço da empresa</strong><span id="feiranteDetalheLocalTexto"></span><span id="feiranteDetalheCep"></span></p><div><strong>Horário de atendimento</strong><div id="feiranteDetalheHorarios"></div></div></div>
+        <a class="btn" href="index.html">← Voltar para parceiros</a>
+      </article>
+      <aside class="feirante-leitura-aside"><section class="feirante-posts"><h2>Notícias e publicações</h2><div id="feirantePostsRecentes"><p class="feirante-posts-vazio">Carregando publicações...</p></div></section><div id="feiranteBannerPublicidade" class="feirante-banner-publicidade"><span>Publicidade</span></div></aside>
+    </div>
+
+    <div id="feirantesErroDetalhe" class="container feirantes-erro feirantes-detalhe-erro hidden"><h3>Não foi possível carregar esta empresa</h3><p>O perfil pode não estar mais disponível.</p><a class="btn" href="index.html">Voltar para parceiros</a></div>
+  </main>
+
+  <div data-site-footer></div>
+  <script src="../shared/layout.js?v=banners-laterais-8"></script>
+  <script src="feirantes.js" defer></script>
+</body>
+</html>
