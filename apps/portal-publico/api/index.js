@@ -1,1 +1,5 @@
-module.exports = require('../server.js');
+const requestHandler = require('../server.js');
+
+module.exports = requestHandler;
+module.exports.default = requestHandler;
+
