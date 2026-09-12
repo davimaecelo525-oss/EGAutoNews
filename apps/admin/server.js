@@ -16,8 +16,12 @@ const ADMIN_USERNAME = process.env.ADMIN_USERNAME || "";
 const SESSION_COOKIE = "portal_admin_session";
 const SERVER_BUILD = "news-schema-real-2026-08-18";
 
+//aq
 app.use(express.json({ limit: "16mb" }));
-app.use(express.static(path.join(__dirname, "public")));
+// Só serve estáticos via Express se NÃO estiver no ambiente do Vercel
+if (!process.env.VERCEL) {
+  app.use(express.static(path.join(__dirname, "public")));
+}
 
 function sendError(res, status, message) {
   return res.status(status).json({ error: message });
@@ -787,7 +791,12 @@ app.patch("/api/registrations/:id/status", requireAuth, async (req, res) => {
 app.get("*", (_req, res) => res.sendFile(path.join(__dirname, "public", "index.html")));
 
 if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(fileURLToPath(import.meta.url))) {
-  app.listen(PORT, () => console.log(`Painel admin em http://localhost:${PORT}`));
+  //app.listen(PORT, () => console.log(`Painel admin em http://localhost:${PORT}`));
 }
 
 export { app, toUiStatus, toDbStatus, mapRegistration, verifyPassword, filterRegistrations, isPublicProfileComplete, mapFair, validateFair, filterFairs, isValidCnpj, isCompanyRecord };
+
+// Remova ou comente a linha antiga do app.listen(PORT, ...)
+
+// Adicione isso na última linha do arquivo:
+export default app;
