@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cadastro de Empresas | EGAutoNews</title>
+  <link rel="stylesheet" href="styles.css?v=empresas-cnpj-1">
+  <style>
+    .status { margin: 16px 0 0; padding: 11px 13px; border-radius: 8px; background: #e9f4fb; color: #075b96; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <header class="topo"><a href="/index.html" class="voltar">← Voltar ao portal</a><span>Cadastro de empresas</span></header>
+  <main>
+    <section class="hero">
+      <div class="limite">
+        <div>
+          <p class="sobretitulo"></p>
+          <h1>Cadastre sua empresa<br>no nosso portal.</h1>
+          <p>Preencha os dados da sua empresa automotiva para análise da equipe EGAutoNews.</p>
+        </div>
+        <ol class="etapas"><li><b>1</b> Dados da empresa</li><li><b>2</b> Envio da inscrição</li><li><b>3</b> Análise da equipe</li></ol>
+      </div>
+    </section>
+    <section class="conteudo">
+      <div class="limite grade">
+        <aside class="ajuda">
+          <p class="sobretitulo">COMO FUNCIONA</p>
+          <h2>Uma inscrição simples e organizada.</h2>
+          <div><b>1. Preencha os dados</b><span>Informe os dados do responsável e da empresa.</span></div>
+          <div><b>2. Envie a inscrição</b><span>O cadastro fica salvo para análise da equipe.</span></div>
+          <div><b>3. Aguarde o contato</b><span>O retorno será feito pelo e-mail ou WhatsApp informado.</span></div>
+        </aside>
+        <section class="cartao" aria-labelledby="titulo-formulario">
+          <p class="sobretitulo">FORMULÁRIO DE INSCRIÇÃO</p>
+          <h2 id="titulo-formulario">Informações da empresa</h2>
+          <p class="legenda">Os campos com <strong>*</strong> são obrigatórios.</p>
+          <form id="formulario-cadastro" novalidate>
+            <fieldset>
+              <legend>Responsável pela empresa</legend>
+              <div class="campos duas-colunas">
+                <label>Nome completo *<input name="fullName" required minlength="3" placeholder="Seu nome completo"></label>
+                <label>CNPJ *<input name="cnpj" required minlength="14" maxlength="18" inputmode="numeric" placeholder="00.000.000/0000-00"></label>
+                <label>E-mail *<input name="email" required type="email" placeholder="voce@email.com"></label>
+                <label>Telefone ou WhatsApp *<input name="phone" required minlength="10" inputmode="tel" placeholder="(61) 99999-9999"></label>
+              </div>
+            </fieldset>
+            <fieldset>
+              <legend>Dados da empresa</legend>
+              <div class="campos duas-colunas">
+                <label>Nome da empresa *<input name="businessName" required minlength="2" placeholder="Ex.: Auto Center Brasília"></label>
+                <label>Região administrativa *<input name="region" required minlength="2" placeholder="Ex.: Ceilândia"></label>
+                <label>Categoria de serviço *<select name="category" required><option value="">Selecione uma categoria</option><option>Agência veicular</option><option>Autopeças</option><option>Oficina</option><option>Outras</option></select></label>
+                <label>Endereço ou referência<input name="boothLocation" placeholder="Ex.: QNN 12, lote 7"></label>
+                <label>CEP da empresa<input name="cep" inputmode="numeric" maxlength="9" placeholder="Ex.: 70000-000"></label>
+                <label>Dias e horários de atendimento<input name="daysHours" placeholder="Ex.: Segunda a sábado, das 8h às 18h"></label>
+              </div>
+              <label class="campo-largo">Descrição dos serviços *<textarea name="description" required minlength="10" rows="5" placeholder="Conte quais serviços sua empresa oferece."></textarea></label>
+            </fieldset>
+            <label class="consentimento"><input type="checkbox" name="consentGiven" required><span>Autorizo o uso dos dados enviados para análise da inscrição e contato sobre a empresa. *</span></label>
+            <p id="mensagem-erro" class="mensagem erro" role="alert" hidden></p>
+            <div class="acoes"><button type="submit">Enviar cadastro da empresa</button><small>Seus dados serão utilizados somente para análise e contato sobre a inscrição.</small></div>
+            <p id="status-envio" class="mensagem status" aria-live="polite" hidden></p>
+          </form>
+          <section id="sucesso" class="sucesso" hidden><div>✓</div><p class="sobretitulo">INSCRIÇÃO RECEBIDA</p><h2>Obrigado por cadastrar sua empresa.</h2><p id="comprovante-inscricao">Recebemos suas informações. A equipe entrará em contato pelo e-mail ou WhatsApp informado.</p><button id="novo-cadastro" type="button">Cadastrar outra empresa</button></section>
+        </section>
+      </div>
+    </section>
+  </main>
+  <script src="script.js?v=empresas-cnpj-1"></script>
+</body>
+</html>
