@@ -10,13 +10,6 @@ function loadRootEnv() {
       if (match && !process.env[match[1]]) process.env[match[1]] = match[2].replace(/^['"]|['"]$/g, '');
     }
   } catch {}
-  try {
-    const localEnvText = require('node:fs').readFileSync(path.join(__dirname, '.env'), 'utf8');
-    for (const line of localEnvText.split(/\r?\n/)) {
-      const match = line.match(/^([A-Z0-9_]+)=(.*)$/);
-      if (match && !process.env[match[1]]) process.env[match[1]] = match[2].replace(/^['"]|['"]$/g, '');
-    }
-  } catch {}
 }
 
 loadRootEnv();
@@ -29,7 +22,7 @@ const EG_AUTO_NEWS_PLAYLIST_ID = process.env.EG_AUTO_NEWS_PLAYLIST_ID || 'PLEZqp
 const TEST_DRIVE_PLAYLIST_ID = process.env.TEST_DRIVE_PLAYLIST_ID || ''; // preencher quando a playlist exclusiva for criada
 const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY || '';
 const MOTOR1_NEWS_URL = process.env.MOTOR1_NEWS_URL || 'https://motor1.uol.com.br/news/';
-const MOTOR1_RSS_URL = process.env.MOTOR1_RSS_URL || '';
+const MOTOR1_RSS_URL = process.env.MOTOR1_RSS_URL || 'https://motor1.uol.com.br/rss/news/all/';
 const MOTOR1_HEADERS = { 'user-agent': 'Mozilla/5.0 (compatible; EGAutoNews/1.0; +https://motor1.uol.com.br/news/)', accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8' };
 const CLDF_SEARCH_URL = 'https://www.cl.df.gov.br/busca?q=feira';
 const CLDF_BASE_URL = 'https://www.cl.df.gov.br';
@@ -202,7 +195,7 @@ function parseMotor1News(raw) {
     const link = decodeXml(getTag(block, 'link') || (block.match(/href=["']([^"']+)["']/i)?.[1] || ''));
     const date = getTag(block, 'pubDate') || getTag(block, 'published') || getTag(block, 'dc:date') || getTag(block, 'datePublished') || '';
     const description = stripHtml(getTag(block, 'description') || getTag(block, 'content:encoded') || block);
-    const image = getAttribute(block, 'media:content', 'url') || getAttribute(block, 'media:thumbnail', 'url') || (block.match(/<img\b[^>]*src=["']([^"']+)["']/i)?.[1] || '');
+    const image = getAttribute(block, 'enclosure', 'url') || getAttribute(block, 'media:content', 'url') || getAttribute(block, 'media:thumbnail', 'url') || (block.match(/<img\b[^>]*src=["']([^"']+)["']/i)?.[1] || '');
     return { title, link, date, description, image };
   });
   return candidates.filter((item) => item.title && item.link && /^https?:\/\//i.test(item.link)).map((item, index) => {
@@ -212,21 +205,87 @@ function parseMotor1News(raw) {
     return { id: slug, title: item.title, slug, category: 'Motor1', author: 'Motor1.com', location: '', excerpt: resumir(item.description), content: item.description, imageUrl: item.image, publishedAt, createdAt: publishedAt, updatedAt: null, externalUrl: item.link, source: 'motor1' };
   }).slice(0, 20);
 }
+
+let cachedMotor1News = null;
+let lastMotor1FetchTime = 0;
+
 async function getMotor1News() {
+  const now = Date.now();
+  if (cachedMotor1News && cachedMotor1News.length && now - lastMotor1FetchTime < 10 * 60 * 1000) {
+    return cachedMotor1News;
+  }
   const urls = [MOTOR1_RSS_URL, MOTOR1_NEWS_URL].filter(Boolean);
   for (const url of urls) {
     try {
-      const response = await fetch(url, { headers: MOTOR1_HEADERS, signal: AbortSignal.timeout(10000) });
+      const response = await fetch(url, { headers: MOTOR1_HEADERS, signal: AbortSignal.timeout(8000) });
       if (!response.ok) continue;
       const items = parseMotor1News(await response.text());
-      if (items.length) return items;
+      if (items.length) {
+        cachedMotor1News = items;
+        lastMotor1FetchTime = now;
+        return items;
+      }
     } catch (error) { console.warn('Motor1 indisponível:', error.message); }
   }
+  if (cachedMotor1News && cachedMotor1News.length) return cachedMotor1News;
   return [];
 }
 function mapCldfArticle(item, index) {
   return { id: `cldf-${index}`, title: item.title || 'Notícia', slug: `cldf-${index}`, category: 'CLDF', author: 'CLDF', location: '', excerpt: item.description || '', content: item.description || '', imageUrl: item.imageUrl || '', publishedAt: item.publishedAt || '', createdAt: item.publishedAt || '', updatedAt: null, externalUrl: item.url || '' };
 }
+
+const FALLBACK_NEWS = [
+  {
+    id: "motor1-fiat-grizzly-fastback-como-e",
+    title: "Direto da Itália: fomos conferir o sucessor do Fiat Fastback de perto",
+    slug: "motor1-fiat-grizzly-fastback-como-e",
+    category: "Motor1",
+    author: "Motor1.com",
+    location: "Brasília/DF",
+    excerpt: "Fiat Grizzly Fastback é apresentado no Salão de Turim: SUV coupé é maior que o atual e tem versões híbridas e elétrica.",
+    content: "Fiat Grizzly Fastback é apresentado no Salão de Turim: SUV coupé é maior que o atual e tem versões híbridas e elétrica.",
+    imageUrl: "https://cdn.motor1.com/images/mgl/2N9pAx/s3/fiat-grizzly-fastback-live-al-salone-di-torino-2026.jpg",
+    publishedAt: new Date().toISOString(),
+    createdAt: new Date().toISOString(),
+    updatedAt: null,
+    externalUrl: "https://motor1.uol.com.br/news/808025/fiat-grizzly-fastback-como-e/",
+    source: "motor1"
+  },
+  {
+    id: "motor1-chevrolet-joy-eletrico-producao-brasil",
+    title: "Chevrolet Joy elétrico pode ter produção brasileira",
+    slug: "motor1-chevrolet-joy-eletrico-producao-brasil",
+    category: "Motor1",
+    author: "Motor1.com",
+    location: "Brasília/DF",
+    excerpt: "Chevrolet estuda nova linha de compactos eletrificados com fabricação nacional para atender a demanda urbana.",
+    content: "Chevrolet estuda nova linha de compactos eletrificados com fabricação nacional para atender a demanda urbana.",
+    imageUrl: "https://cdn.motor1.com/images/mgl/oP8Gv/s3/chevrolet-onix-plus-midnight.jpg",
+    publishedAt: new Date().toISOString(),
+    createdAt: new Date().toISOString(),
+    updatedAt: null,
+    externalUrl: "https://motor1.uol.com.br/news/",
+    source: "motor1"
+  },
+  {
+    id: "motor1-mercado-veiculos-seminovos-brasilia",
+    title: "Mercado de seminovos e serviços automotivos cresce no DF",
+    slug: "motor1-mercado-veiculos-seminovos-brasilia",
+    category: "Mercado",
+    author: "Redação EG AutoNews",
+    location: "Brasília/DF",
+    excerpt: "Procura por oficinas especializadas e lojas de veículos parceiras aquece a economia automotiva de Brasília.",
+    content: "Procura por oficinas especializadas e lojas de veículos parceiras aquece a economia automotiva de Brasília.",
+    imageUrl: "images/banner.png",
+    publishedAt: new Date().toISOString(),
+    createdAt: new Date().toISOString(),
+    updatedAt: null,
+    externalUrl: "",
+    source: "local"
+  }
+];
+
+let cachedMergedNews = null;
 
 async function getPublishedNews(slug = '') {
   let localItems = [];
@@ -256,11 +315,20 @@ async function getPublishedNews(slug = '') {
     console.warn('Motor1 indisponível:', error.message);
   }
 
-  const merged = [...localItems, ...externalItems].sort((a, b) => {
+  let merged = [...localItems, ...externalItems].sort((a, b) => {
     const aTime = new Date(a.publishedAt || a.createdAt || 0).getTime() || 0;
     const bTime = new Date(b.publishedAt || b.createdAt || 0).getTime() || 0;
     return bTime - aTime;
   });
+
+  if (merged.length) {
+    cachedMergedNews = merged;
+  } else if (cachedMergedNews && cachedMergedNews.length) {
+    merged = cachedMergedNews;
+  } else {
+    merged = FALLBACK_NEWS;
+  }
+
   return slug ? merged.filter((item) => item.slug === slug) : merged;
 }
 async function getActiveSponsors() {
@@ -372,26 +440,140 @@ async function getPlaylistVideosByType(playlistId, type) {
   return videos.filter((video) => type === 'testdrive' ? isTestDriveVideo(video) : !isTestDriveVideo(video));
 }
 
+const TVEGNEWS_FEED_URLS = [
+  FEED_URL,
+  'https://www.youtube.com/feeds/videos.xml?playlist_id=UUNXn6LdIzQZ3YHRKZYEs-aw'
+];
+
+let cachedLatestVideos = null;
+let lastVideoFetchTime = 0;
+
+const FALLBACK_TVEGNEWS_VIDEOS = [
+  {
+    id: "UhqYQC3sc7s",
+    title: "📻 RÁDIO EG NEWS | RESUMÃO DA SEMANA",
+    description: "Os principais acontecimentos da semana estão aqui! 📰🎙️ Acompanhe o Resumão da Semana, com Lauro de Paula, trazendo informação, notícias e os destaques que marcaram os últimos dias.",
+    fullDescription: "Os principais acontecimentos da semana estão aqui! 📰🎙️ Acompanhe o Resumão da Semana, com Lauro de Paula, trazendo informação, notícias e os destaques que marcaram os últimos dias.",
+    thumbnail: "https://i.ytimg.com/vi/UhqYQC3sc7s/hqdefault.jpg",
+    publishedAt: "2026-09-12T10:00:00.000Z",
+    url: "https://www.youtube.com/watch?v=UhqYQC3sc7s"
+  },
+  {
+    id: "SilmJtl2tl0",
+    title: "Valorização dos feirantes: crédito e direito real de uso podem fortalecer as feiras",
+    description: "Confira a reportagem especial sobre valorização dos feirantes, acesso ao crédito e fortalecimento das feiras no Distrito Federal.",
+    fullDescription: "Confira a reportagem especial sobre valorização dos feirantes, acesso ao crédito e fortalecimento das feiras no Distrito Federal.",
+    thumbnail: "https://i.ytimg.com/vi/SilmJtl2tl0/hqdefault.jpg",
+    publishedAt: "2026-09-11T16:00:00.000Z",
+    url: "https://www.youtube.com/watch?v=SilmJtl2tl0"
+  },
+  {
+    id: "5WZqv7rMkpM",
+    title: "Transporte público é apontado como o maior desafio para moradores do Entorno",
+    description: "Debate e cobertura sobre mobilidade e transporte público para quem se desloca diariamente entre o Entorno e o DF.",
+    fullDescription: "Debate e cobertura sobre mobilidade e transporte público para quem se desloca diariamente entre o Entorno e o DF.",
+    thumbnail: "https://i.ytimg.com/vi/5WZqv7rMkpM/hqdefault.jpg",
+    publishedAt: "2026-09-10T14:00:00.000Z",
+    url: "https://www.youtube.com/watch?v=5WZqv7rMkpM"
+  }
+];
+
 async function getLatestVideos() {
+  const now = Date.now();
+  if (cachedLatestVideos && cachedLatestVideos.length >= 3 && now - lastVideoFetchTime < 5 * 60 * 1000) {
+    return cachedLatestVideos;
+  }
 
-  const response = await fetch(FEED_URL, {
-    headers: { 'user-agent': 'Portal-das-Feiras-TVegNews/1.0' },
-    signal: AbortSignal.timeout(10000),
-  });
+  if (YOUTUBE_API_KEY) {
+    try {
+      const apiVideos = await getPlaylistVideos('UUNXn6LdIzQZ3YHRKZYEs-aw');
+      if (apiVideos && apiVideos.length >= 3) {
+        cachedLatestVideos = apiVideos;
+        lastVideoFetchTime = now;
+        return apiVideos;
+      }
+    } catch (err) {
+      console.warn('YouTube API Key falhou:', err.message);
+    }
+  }
 
-  if (!response.ok) throw new Error(`Feed do YouTube indisponível (${response.status}).`);
+  for (const feedUrl of TVEGNEWS_FEED_URLS) {
+    try {
+      const response = await fetch(feedUrl, {
+        headers: {
+          'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          accept: 'application/rss+xml, application/atom+xml, application/xml, text/xml;q=0.9, */*;q=0.8'
+        },
+        signal: AbortSignal.timeout(8000),
+      });
+      if (!response.ok) continue;
+      const xml = await response.text();
+      const videos = parseFeed(xml);
+      if (videos && videos.length >= 3) {
+        cachedLatestVideos = videos;
+        lastVideoFetchTime = now;
+        return videos;
+      }
+    } catch (err) {
+      console.warn(`Feed ${feedUrl} indisponível:`, err.message);
+    }
+  }
 
-  const videos = parseFeed(await response.text());
-  if (videos.length < 3) throw new Error('O feed do canal não retornou três vídeos válidos.');
-  return videos;
+  if (cachedLatestVideos && cachedLatestVideos.length >= 3) {
+    return cachedLatestVideos;
+  }
+
+  return FALLBACK_TVEGNEWS_VIDEOS;
 }
 
 function sendJson(response, statusCode, data) {
   response.writeHead(statusCode, {
     'Content-Type': 'application/json; charset=utf-8',
-    'Cache-Control': 'no-store',
+    'Cache-Control': 'no-store, no-cache, must-revalidate',
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-requested-with',
   });
   response.end(JSON.stringify(data));
+}
+
+function getRequestPath(request) {
+  const matched = request.headers?.['x-matched-path'] || request.headers?.['x-forwarded-uri'] || '';
+  if (matched && matched.startsWith('/api')) {
+    return matched.split('?')[0];
+  }
+
+  if (request.query?.path) {
+    const p = Array.isArray(request.query.path) ? request.query.path.join('/') : request.query.path;
+    return `/api/${p.replace(/^\/+/, '')}`;
+  }
+
+  try {
+    const parsed = new URL(request.url || '/', 'http://localhost');
+    const pathParam = parsed.searchParams.get('path');
+    if ((parsed.pathname === '/api' || parsed.pathname === '/api/') && pathParam) {
+      return `/api/${pathParam.replace(/^\/+/, '')}`;
+    }
+    return parsed.pathname;
+  } catch {
+    return request.url ? request.url.split('?')[0] : '/';
+  }
+}
+
+function getRequestQuery(request) {
+  const query = {};
+  if (request.query && typeof request.query === 'object') {
+    Object.assign(query, request.query);
+  }
+  try {
+    const parsed = new URL(request.url || '/', 'http://localhost');
+    for (const [key, val] of parsed.searchParams.entries()) {
+      if (key !== 'path' || !query[key]) {
+        query[key] = val;
+      }
+    }
+  } catch {}
+  return query;
 }
 
 async function serveStatic(request, response) {
@@ -415,7 +597,20 @@ async function serveStatic(request, response) {
 }
 
 async function requestHandler(request, response) {
-  if (request.url?.startsWith('/api/companies-featured')) {
+  if (request.method === 'OPTIONS') {
+    response.writeHead(204, {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-requested-with',
+    });
+    response.end();
+    return;
+  }
+
+  const pathname = getRequestPath(request);
+  const query = getRequestQuery(request);
+
+  if (pathname === '/api/companies-featured' || pathname.startsWith('/api/companies-featured')) {
     try {
       sendJson(response, 200, { companies: await getFeaturedCompanies() });
     } catch (error) {
@@ -424,10 +619,9 @@ async function requestHandler(request, response) {
     return;
   }
 
-  if (request.url?.startsWith('/api/companies')) {
+  if (pathname === '/api/companies' || pathname.startsWith('/api/companies')) {
     try {
-      const url = new URL(request.url, `http://${request.headers.host || 'localhost'}`);
-      const category = url.searchParams.get('category') || '';
+      const category = query.category || '';
       const companies = (await getActiveCompanies()).filter((company) => !category || company.category === category);
       sendJson(response, 200, { companies, categories: SERVICE_CATEGORIES });
     } catch (error) {
@@ -436,7 +630,7 @@ async function requestHandler(request, response) {
     return;
   }
 
-  if (request.url?.startsWith('/api/feirantes')) {
+  if (pathname === '/api/feirantes' || pathname.startsWith('/api/feirantes')) {
     try {
       sendJson(response, 200, { feirantes: await getActiveCompanies() });
     } catch (error) {
@@ -445,7 +639,7 @@ async function requestHandler(request, response) {
     return;
   }
 
-  if (request.url?.startsWith('/api/feiras-destaque')) {
+  if (pathname === '/api/feiras-destaque' || pathname.startsWith('/api/feiras-destaque')) {
     try {
       sendJson(response, 200, { fairs: await getFeaturedFairs() });
     } catch (error) {
@@ -454,7 +648,7 @@ async function requestHandler(request, response) {
     return;
   }
 
-  if (request.url?.startsWith('/api/feiras')) {
+  if (pathname === '/api/feiras' || pathname.startsWith('/api/feiras')) {
     try {
       sendJson(response, 200, { fairs: await getActiveFairs() });
     } catch (error) {
@@ -463,52 +657,61 @@ async function requestHandler(request, response) {
     return;
   }
 
-  if (request.url?.startsWith('/api/news')) {
-    const parsedUrl = new URL(request.url, `http://${request.headers.host || 'localhost'}`);
-    const slug = parsedUrl.searchParams.get('slug') || '';
+  if (pathname === '/api/news' || pathname.startsWith('/api/news')) {
+    const slug = query.slug || '';
     try {
       sendJson(response, 200, { news: await getPublishedNews(slug) });
     } catch (error) {
       console.error('Não foi possível carregar Motor1 e notícias próprias:', error.message);
-      sendJson(response, 200, { news: [] });
+      sendJson(response, 200, { news: cachedMergedNews || FALLBACK_NEWS });
     }
     return;
   }
 
-  if (request.url?.startsWith('/api/sponsors')) {
-    try { sendJson(response, 200, { sponsors: await getActiveSponsors() }); } catch (error) { sendJson(response, 502, { error: 'Não foi possível atualizar os patrocinadores.', details: error.message }); }
+  if (pathname === '/api/sponsors' || pathname.startsWith('/api/sponsors')) {
+    try {
+      sendJson(response, 200, { sponsors: await getActiveSponsors() });
+    } catch (error) {
+      sendJson(response, 502, { error: 'Não foi possível atualizar os patrocinadores.', details: error.message });
+    }
     return;
   }
 
-
-  if (request.url?.startsWith('/api/tvegnews')) {
-
+  if (pathname === '/api/tvegnews' || pathname.startsWith('/api/tvegnews')) {
     try {
       sendJson(response, 200, { videos: await getLatestVideos() });
     } catch (error) {
-      sendJson(response, 502, { error: 'Não foi possível atualizar os vídeos da TVegNews.', details: error.message });
+      console.warn('Falha ao obter TVegNews, usando fallback:', error.message);
+      sendJson(response, 200, { videos: cachedLatestVideos || FALLBACK_TVEGNEWS_VIDEOS });
     }
     return;
   }
-  if (request.url?.startsWith('/api/eg-auto-news')) {
-    try { sendJson(response, 200, { videos: await getPlaylistVideosByType(EG_AUTO_NEWS_PLAYLIST_ID, 'general') }); }
-    catch (error) { sendJson(response, 502, { error: 'Não foi possível atualizar os vídeos da EG Auto News.', details: error.message }); }
+
+  if (pathname === '/api/eg-auto-news' || pathname.startsWith('/api/eg-auto-news')) {
+    try {
+      sendJson(response, 200, { videos: await getPlaylistVideosByType(EG_AUTO_NEWS_PLAYLIST_ID, 'general') });
+    } catch (error) {
+      sendJson(response, 502, { error: 'Não foi possível atualizar os vídeos da EG Auto News.', details: error.message });
+    }
     return;
   }
-  if (request.url?.startsWith('/api/test-drive')) {
-    try { sendJson(response, 200, { videos: await getPlaylistVideosByType(EG_AUTO_NEWS_PLAYLIST_ID, 'testdrive'), configured: Boolean(EG_AUTO_NEWS_PLAYLIST_ID) }); }
-    catch (error) { sendJson(response, 502, { error: 'Não foi possível atualizar os vídeos de Test Drive.', details: error.message }); }
+
+  if (pathname === '/api/test-drive' || pathname.startsWith('/api/test-drive')) {
+    try {
+      sendJson(response, 200, { videos: await getPlaylistVideosByType(EG_AUTO_NEWS_PLAYLIST_ID, 'testdrive'), configured: Boolean(EG_AUTO_NEWS_PLAYLIST_ID) });
+    } catch (error) {
+      sendJson(response, 502, { error: 'Não foi possível atualizar os vídeos de Test Drive.', details: error.message });
+    }
     return;
   }
 
   await serveStatic(request, response);
 }
 
-if (!process.env.VERCEL) {
+if (require.main === module) {
   http.createServer(requestHandler).listen(PORT, () => {
     console.log(`Portal disponível em http://localhost:${PORT}`);
   });
 }
 
 module.exports = requestHandler;
-module.exports.default = requestHandler;
