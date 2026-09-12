@@ -1,0 +1,16 @@
+{
+  "name": "portal-das-feiras",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node apps/portal-publico/server.js",
+    "start:portal": "node apps/portal-publico/server.js",
+    "start:cadastro": "node apps/cadastro/server.js",
+    "start:admin": "node apps/admin/server.js",
+    "start:all": "node scripts/start-all.js",
+    "admin:hash": "node scripts/admin-hash.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

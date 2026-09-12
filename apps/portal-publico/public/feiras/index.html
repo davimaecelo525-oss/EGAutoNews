@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Empresas parceiras | EGAutoNews</title>
+  <meta name="description" content="Encontre agências veiculares, autopeças, oficinas e outras empresas parceiras do EGAutoNews.">
+  <link rel="stylesheet" href="../styles.css?v=empresas-cards-2">
+</head>
+<body class="pagina-feiras">
+  <div data-site-header></div>
+
+  <main class="feiras-publicas-main">
+    <section class="feiras-hero">
+      <div class="container">
+        <p class="eyebrow">EMPRESAS AUTOMOTIVAS</p>
+        <h1>Encontre serviços automotivos perto de você</h1>
+        <p>Conheça agências veiculares, autopeças, oficinas e outros parceiros do EGAutoNews.</p>
+      </div>
+    </section>
+
+    <section class="feiras-listagem" aria-labelledby="titulo-feiras">
+      <div class="container">
+        <div class="feiras-toolbar">
+          <div>
+            <h2 id="titulo-feiras">Empresas parceiras</h2>
+            <p id="feirasResumo">Carregando empresas...</p>
+          </div>
+          <div class="feiras-filtros">
+            <label class="sr-only" for="feirasBusca">Buscar empresa</label>
+            <input id="feirasBusca" type="search" placeholder="Buscar por empresa, região ou endereço">
+            <label class="sr-only" for="feirasRegiao">Filtrar por região</label>
+            <select id="feirasRegiao">
+              <option value="">Todas as regiões</option>
+            </select>
+          </div>
+        </div>
+        <div id="empresasCategorias" class="empresas-categorias" aria-live="polite"></div>
+        <div id="feirasVazio" class="feiras-vazio hidden">
+          <h3>Nenhuma empresa encontrada</h3>
+          <p>Tente buscar por outra região ou palavra-chave.</p>
+        </div>
+        <div id="feirasErro" class="feiras-erro hidden">
+          <h3>Não foi possível carregar as empresas</h3>
+          <p>Atualize a página ou tente novamente mais tarde.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div data-site-footer></div>
+  <script src="../shared/layout.js?v=empresas-categorias-1"></script>
+  <script src="feiras.js?v=empresas-cards-2" defer></script>
+</body>
+</html>
