@@ -30,8 +30,8 @@
             <li><a href="${link('feirantes/index.html')}"${active('feirantes')}>Videos</a></li>
             <li class="menu-solucoes">
               <a href="${link('index.html#solucoes-feira')}" aria-haspopup="true" aria-expanded="false">Soluções</a>
-              <div class="menu-solucoes-dropdown" role="menu" aria-label="Soluções para sua feira">
-                <h3 class="solucoes-menu-titulo">Soluções para sua feira</h3>
+              <div class="menu-solucoes-dropdown" role="menu" aria-label="Soluções">
+                <h3 class="solucoes-menu-titulo">Soluções para sua empresa</h3>
                 <div class="solucao-menu-item" tabindex="0" role="menuitem">
                   <strong>🏗️ Estrutura</strong><span>Barracas, tendas, mesas, iluminação e geradores.</span>
                 </div>
