@@ -10,6 +10,13 @@ function loadRootEnv() {
       if (match && !process.env[match[1]]) process.env[match[1]] = match[2].replace(/^['"]|['"]$/g, '');
     }
   } catch {}
+  try {
+    const localEnvText = require('node:fs').readFileSync(path.join(__dirname, '.env'), 'utf8');
+    for (const line of localEnvText.split(/\r?\n/)) {
+      const match = line.match(/^([A-Z0-9_]+)=(.*)$/);
+      if (match && !process.env[match[1]]) process.env[match[1]] = match[2].replace(/^['"]|['"]$/g, '');
+    }
+  } catch {}
 }
 
 loadRootEnv();
@@ -419,7 +426,7 @@ async function requestHandler(request, response) {
 
   if (request.url?.startsWith('/api/companies')) {
     try {
-      const url = new URL(request.url, `http://${request.headers.host}`);
+      const url = new URL(request.url, `http://${request.headers.host || 'localhost'}`);
       const category = url.searchParams.get('category') || '';
       const companies = (await getActiveCompanies()).filter((company) => !category || company.category === category);
       sendJson(response, 200, { companies, categories: SERVICE_CATEGORIES });
@@ -429,7 +436,7 @@ async function requestHandler(request, response) {
     return;
   }
 
-    if (request.url?.startsWith('/api/feirantes')) {
+  if (request.url?.startsWith('/api/feirantes')) {
     try {
       sendJson(response, 200, { feirantes: await getActiveCompanies() });
     } catch (error) {
@@ -457,7 +464,7 @@ async function requestHandler(request, response) {
   }
 
   if (request.url?.startsWith('/api/news')) {
-    const parsedUrl = new URL(request.url, `http://localhost:${PORT}`);
+    const parsedUrl = new URL(request.url, `http://${request.headers.host || 'localhost'}`);
     const slug = parsedUrl.searchParams.get('slug') || '';
     try {
       sendJson(response, 200, { news: await getPublishedNews(slug) });
@@ -497,10 +504,11 @@ async function requestHandler(request, response) {
   await serveStatic(request, response);
 }
 
-if (require.main === module) {
+if (!process.env.VERCEL) {
   http.createServer(requestHandler).listen(PORT, () => {
     console.log(`Portal disponível em http://localhost:${PORT}`);
   });
 }
 
 module.exports = requestHandler;
+module.exports.default = requestHandler;
